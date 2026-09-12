@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NIM Studio — NVIDIA AI Playground</title>
+<meta name="description" content="Chat with NVIDIA NIM models, generate images, and explore every model available on your API key.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2376b900'/%3E%3Cpath d='M18 44V20h9c7 0 12 4 12 12s-5 12-12 12h-9zm6-6h3c3.6 0 6-2.2 6-6s-2.4-6-6-6h-3v12z' fill='%23111'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">N</span>
+    <div class="brand-text">
+      <strong>NIM Studio</strong>
+      <span class="brand-sub">NVIDIA AI Playground</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="connBadge" class="conn-badge off" title="Connection status"><span class="dot"></span><span id="connLabel">offline</span></span>
+    <button id="setupBtn" class="icon-btn" title="API key & connection">🔑</button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= CHAT ================= -->
+  <section id="tab-chat" class="tab active">
+    <div class="model-bar">
+      <button id="chatModelBtn" class="model-pill">🤖 <span id="chatModelName">Select a model</span> ▾</button>
+      <div class="model-bar-actions">
+        <button id="chatSettingsBtn" class="icon-btn" title="Chat settings">⚙️</button>
+        <button id="clearChatBtn" class="icon-btn" title="Clear conversation">🗑️</button>
+      </div>
+    </div>
+
+    <div id="chatMessages" class="messages">
+      <div class="empty-state" id="chatEmpty">
+        <div class="empty-logo">🚀</div>
+        <h2>Welcome to NIM Studio</h2>
+        <p>Enter your NVIDIA API key, pick any model, and start chatting.<br>
+        You can attach <b>images</b> (for vision models) and <b>text / code files</b>.</p>
+        <p class="dim">Get a free key at <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a></p>
+      </div>
+    </div>
+
+    <div id="attachPreviews" class="attach-previews"></div>
+
+    <div class="composer">
+      <button id="attachBtn" class="icon-btn" title="Attach files">📎</button>
+      <input type="file" id="fileInput" multiple hidden
+        accept="image/*,.txt,.md,.markdown,.csv,.tsv,.json,.js,.mjs,.ts,.jsx,.tsx,.py,.rb,.go,.rs,.java,.kt,.c,.h,.cpp,.hpp,.cs,.php,.sh,.yml,.yaml,.toml,.ini,.log,.xml,.html,.css,.sql,.swift,.r,.lua,.tex">
+      <textarea id="chatInput" rows="1" placeholder="Message the model…"></textarea>
+      <button id="sendBtn" class="send-btn" title="Send">➤</button>
+      <button id="stopBtn" class="stop-btn" title="Stop" hidden>■</button>
+    </div>
+  </section>
+
+  <!-- ================= IMAGE ================= -->
+  <section id="tab-image" class="tab">
+    <div class="image-panel">
+      <h2>🎨 Image generation</h2>
+      <label class="field-label">Model</label>
+      <select id="imgModelSel" class="field">
+        <option value="">Connect to load image models…</option>
+      </select>
+
+      <label class="field-label">Prompt</label>
+      <textarea id="imgPrompt" class="field" rows="3" placeholder="A neon-lit cyberpunk city street at night, rain reflections, cinematic…"></textarea>
+
+      <details class="advanced">
+        <summary>Advanced (SDXL / diffusion options)</summary>
+        <div class="adv-grid">
+          <div><label>Size</label>
+            <select id="imgSize" class="field">
+              <option value="1024x1024" selected>1024 × 1024</option>
+              <option value="1024x768">1024 × 768</option>
+              <option value="768x1024">768 × 1024</option>
+              <option value="512x512">512 × 512</option>
+            </select>
+          </div>
+          <div><label>Steps</label><input id="imgSteps" class="field" type="number" min="1" max="100" value="30"></div>
+          <div><label>Guidance (CFG)</label><input id="imgCfg" class="field" type="number" min="1" max="20" step="0.5" value="5"></div>
+        </div>
+      </details>
+
+      <button id="imgGenBtn" class="primary-btn">✨ Generate image</button>
+      <div id="imgStatus" class="img-status"></div>
+      <div id="imgGallery" class="img-gallery"></div>
+    </div>
+  </section>
+
+  <!-- ================= MODELS ================= -->
+  <section id="tab-models" class="tab">
+    <div class="models-panel">
+      <h2>🧩 Models on your key</h2>
+      <div class="models-toolbar">
+        <input id="modelSearch" class="field search" type="search" placeholder="Search models…">
+        <div class="chips" id="catChips">
+          <button class="chip active" data-cat="all">All <span id="cnt-all"></span></button>
+          <button class="chip" data-cat="chat">Chat <span id="cnt-chat"></span></button>
+          <button class="chip" data-cat="image">Image <span id="cnt-image"></span></button>
+          <button class="chip" data-cat="other">Other <span id="cnt-other"></span></button>
+        </div>
+        <button id="refreshModelsBtn" class="ghost-btn">↻ Refresh</button>
+      </div>
+      <div id="modelList" class="model-list">
+        <p class="dim center">Connect with your API key to load models.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav id="bottomNav">
+  <button class="nav-btn active" data-tab="chat">💬<span>Chat</span></button>
+  <button class="nav-btn" data-tab="image">🎨<span>Image</span></button>
+  <button class="nav-btn" data-tab="models">🧩<span>Models</span></button>
+</nav>
+
+<!-- ================= SETUP MODAL ================= -->
+<div id="setupModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3>🔑 Connect to NVIDIA</h3><button class="icon-btn modal-close" data-close="setupModal">✕</button></div>
+    <label class="field-label">API key</label>
+    <div class="key-row">
+      <input id="apiKeyInput" class="field" type="password" placeholder="nvapi-…" autocomplete="off" spellcheck="false">
+      <button id="keyEyeBtn" class="icon-btn" title="Show/hide key">👁️</button>
+    </div>
+    <p class="dim small">Get a key at <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a> → your profile → API Keys. The key is stored <b>only in this browser</b> (localStorage).</p>
+
+    <label class="field-label">Connection mode</label>
+    <select id="modeSel" class="field">
+      <option value="auto" selected>Auto (try direct, fall back to local proxy)</option>
+      <option value="direct">Direct (browser → NVIDIA)</option>
+      <option value="proxy">Local proxy (run server.py)</option>
+    </select>
+    <p class="dim small">If the browser blocks direct calls to NVIDIA (CORS), run <code>python3 server.py</code> in the site folder — the app will automatically route through it.</p>
+
+    <div class="modal-actions">
+      <button id="connectBtn" class="primary-btn">Connect</button>
+      <button id="disconnectBtn" class="ghost-btn">Forget key</button>
+    </div>
+    <div id="setupStatus" class="setup-status"></div>
+  </div>
+</div>
+
+<!-- ================= MODEL PICKER MODAL ================= -->
+<div id="pickerModal" class="modal-backdrop" hidden>
+  <div class="modal tall">
+    <div class="modal-head"><h3>Choose a chat model</h3><button class="icon-btn modal-close" data-close="pickerModal">✕</button></div>
+    <input id="pickerSearch" class="field search" type="search" placeholder="Search…">
+    <div id="pickerList" class="picker-list"></div>
+  </div>
+</div>
+
+<!-- ================= SETTINGS MODAL ================= -->
+<div id="settingsModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3>⚙️ Chat settings</h3><button class="icon-btn modal-close" data-close="settingsModal">✕</button></div>
+
+    <label class="field-label">System prompt <span class="dim">(optional)</span></label>
+    <textarea id="sysPrompt" class="field" rows="3" placeholder="You are a helpful assistant…"></textarea>
+
+    <label class="field-label">Temperature: <span id="tempLabel">0.7</span></label>
+    <input id="tempRange" type="range" min="0" max="2" step="0.05" value="0.7">
+
+    <label class="field-label">Max output tokens</label>
+    <input id="maxTokens" class="field" type="number" min="64" max="32768" step="64" value="2048">
+
+    <div class="modal-actions">
+      <button class="primary-btn" data-close="settingsModal">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
